@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+import traceback
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -28,16 +29,19 @@ def load_model_on_startup() -> None:
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "dna_expected_length": 101,
-            "protein_max_length": 800,
-            "model_script_path": str(MODEL_SCRIPT_PATH),
-            "model_weights_path": str(MODEL_WEIGHTS_PATH),
-        },
-    )
+    try:
+        return templates.TemplateResponse(
+            "index.html",
+            {
+                "request": request,
+                "dna_expected_length": 101,
+                "protein_max_length": 800,
+                "model_script_path": str(MODEL_SCRIPT_PATH),
+                "model_weights_path": str(MODEL_WEIGHTS_PATH),
+            },
+        )
+    except Exception:
+        return PlainTextResponse(traceback.format_exc(), status_code=500)
 
 
 @app.get("/health")
