@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TF-DNA Binding Atlas</title>
+  <link rel="stylesheet" href="/static/style.css?v=20260402a">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero-band">
+      <div class="hero-copyblock">
+        <p class="eyebrow">TF-DNA Binding Atlas</p>
+        <h1>Map likely transcription factor binding from sequence alone.</h1>
+        <p class="hero-copy">
+          Inspect one protein chain against one 101 bp DNA window, recover the model probability,
+          and trace where the network concentrates attention across nucleotides and amino-acid positions.
+        </p>
+        <div class="hero-actions">
+          <a class="hero-link" href="#workspace">Open workspace</a>
+          <a class="hero-link secondary" href="#method">Method notes</a>
+        </div>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="helix helix-dna">
+          <span>A</span><span>C</span><span>G</span><span>T</span><span>A</span><span>C</span><span>G</span><span>T</span><span>A</span><span>N</span>
+        </div>
+        <div class="signal-grid">
+          <div class="signal-track">
+            <label>DNA attention</label>
+            <div class="bars bars-dna">
+              <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="signal-track">
+            <label>Protein saliency</label>
+            <div class="bars bars-protein">
+              <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-caption">
+          Cross-attention over DNA, gradient-times-input over residues.
+        </div>
+      </div>
+
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <span>DNA window</span>
+          <strong>{{ dna_expected_length }} bp</strong>
+        </div>
+        <div class="hero-meta-item">
+          <span>Protein cap</span>
+          <strong>{{ protein_max_length }} aa</strong>
+        </div>
+        <div class="hero-meta-item">
+          <span>Runtime</span>
+          <strong>CPU inference</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="support-strip">
+      <div>
+        <span class="support-label">Model assets</span>
+        <code>{{ model_script_path }}</code>
+      </div>
+      <div>
+        <span class="support-label">Weights</span>
+        <code>{{ model_weights_path }}</code>
+      </div>
+    </section>
+
+    <section class="workspace" id="workspace">
+      <aside class="workspace-sidebar">
+        <div class="sidebar-block">
+          <p class="sidebar-label">Assay frame</p>
+          <h2>Single-pair binding screen</h2>
+          <p>
+            Submit one transcription factor protein sequence and one candidate DNA window.
+            The app normalizes inputs to the deployed model interface before inference.
+          </p>
+        </div>
+
+        <div class="sidebar-block">
+          <p class="sidebar-label">Quick examples</p>
+          <p>
+            Preload a curated TF-DNA example with a 727 aa protein and an exact 101 bp DNA window.
+          </p>
+          <div class="example-actions">
+            <button type="button" class="ghost-button example-button" data-example="researcher">
+              Load researcher example
+            </button>
+            <button type="button" class="ghost-button example-button" data-example="researcher" data-auto-run="true">
+              Load and run example
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-block">
+          <p class="sidebar-label">Normalization rules</p>
+          <ul class="rule-list">
+            <li>DNA accepts only A/C/G/T/N and is auto-normalized to {{ dna_expected_length }} bp.</li>
+            <li>Protein letters outside the standard amino-acid set are mapped to the UNK channel.</li>
+            <li>Protein sequences longer than {{ protein_max_length }} residues are truncated before scoring.</li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="workspace-main">
+        <div class="section-heading">
+          <p class="sidebar-label">Input workspace</p>
+          <h2>Sequence submission</h2>
+        </div>
+        <form id="predict-form">
+          <div class="field-grid">
+            <label class="field">
+              <span>Protein sequence</span>
+              <textarea id="protein-sequence" name="protein_sequence" rows="12" placeholder="Paste one protein sequence"></textarea>
+            </label>
+
+            <label class="field">
+              <span>DNA sequence</span>
+              <textarea id="dna-sequence" name="dna_sequence" rows="12" placeholder="Paste one DNA sequence"></textarea>
+            </label>
+          </div>
+
+          <div class="action-row">
+            <button type="submit" id="predict-button">Run binding prediction</button>
+            <span id="loading-indicator" class="loading hidden">Running inference...</span>
+          </div>
+        </form>
+
+        <div id="error-box" class="message error hidden"></div>
+        <div id="info-box" class="message info hidden"></div>
+
+        <div class="section-heading results-heading">
+          <p class="sidebar-label">Inference readout</p>
+          <h2>Binding evidence</h2>
+        </div>
+
+        <div id="empty-state" class="empty-state">
+          Submit one protein sequence and one DNA sequence to reveal the binding score, normalized input record, and high-weight positions.
+        </div>
+
+        <div id="results-content" class="results-flow hidden">
+          <section class="summary-ribbon">
+            <div class="summary-ribbon-main">
+              <span class="summary-overline">Prediction probability</span>
+              <strong id="probability-value">-</strong>
+            </div>
+            <div class="summary-ribbon-side">
+              <div>
+                <span class="summary-label">Predicted class</span>
+                <strong id="class-value">-</strong>
+              </div>
+              <div>
+                <span class="summary-label">Raw logit</span>
+                <strong id="logit-value">-</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="result-grid">
+            <div class="result-block">
+              <h3>Input summary</h3>
+              <div id="input-summary" class="summary-lines"></div>
+            </div>
+
+            <div class="result-block">
+              <h3>Highest-weight positions</h3>
+              <div id="peak-summary" class="peak-summary"></div>
+            </div>
+          </section>
+
+          <section class="result-block">
+            <h3>Normalized inputs</h3>
+            <div id="normalized-summary" class="normalized-sequences"></div>
+          </section>
+
+          <section class="result-block">
+            <div class="result-header">
+              <div>
+                <p class="track-label">Track 1</p>
+                <h3>DNA attention map</h3>
+              </div>
+              <div class="legend">
+                <span>Low</span>
+                <div class="legend-bar"></div>
+                <span>High</span>
+              </div>
+            </div>
+            <div id="dna-sequence-view" class="sequence-view dna-view"></div>
+          </section>
+
+          <section class="result-block">
+            <div class="result-header">
+              <div>
+                <p class="track-label">Track 2</p>
+                <h3>Protein residue saliency</h3>
+              </div>
+              <div class="legend">
+                <span>Low</span>
+                <div class="legend-bar"></div>
+                <span>High</span>
+              </div>
+            </div>
+            <div id="protein-sequence-view" class="sequence-view protein-view"></div>
+          </section>
+
+          <section class="method-note" id="method">
+            <div>
+              <p class="sidebar-label">Attribution method</p>
+              <h3>How to read the tracks</h3>
+            </div>
+            <div class="method-copy">
+              <p>DNA positions are colored from the model cross-attention weights returned during inference.</p>
+              <p>Protein positions are colored from gradient × input scores and only the true sequence length is rendered.</p>
+            </div>
+          </section>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/static/app.js?v=20260402a"></script>
+</body>
+</html>
