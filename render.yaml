@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: tf-dna-binding-atlas
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn webapp.app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: TFDNA_SMTP_HOST
+        sync: false
+      - key: TFDNA_SMTP_PORT
+        value: "465"
+      - key: TFDNA_SMTP_USERNAME
+        sync: false
+      - key: TFDNA_SMTP_PASSWORD
+        sync: false
+      - key: TFDNA_SMTP_FROM
+        sync: false
+      - key: TFDNA_SMTP_STARTTLS
+        value: "false"
+      - key: TFDNA_SMTP_SSL
+        value: "true"

@@ -1,14 +1,17 @@
 # TF-DNA Inference Web App
 
-This project provides a local FastAPI demo for the trained TF-DNA binding model. It uses the original model definition and weights directly from:
+This project provides a local and deployable FastAPI demo for the trained TF-DNA binding model. The deployable app bundles the inference-ready model definition and weights inside the repository under:
 
-- `D:\project\NT\Motif_logo\cnn_multimodal_mstc_crossattn_v2_pro_2.py`
-- `D:\project\NT\Motif_logo\best_model_v2_pro.pth`
+- `webapp/model_assets/multimodal_model.py`
+- `webapp/model_assets/best_model_v2_pro.pth`
+
+The bundled model definition preserves the original one-hot encoding behavior and the deployed `MultiModalMSTC_CrossAttn` architecture used to load the provided state dict.
 
 The app runs on CPU and exposes a simple browser UI for:
 
 - protein sequence input
 - DNA sequence input
+- optional email input for result delivery
 - predicted probability and class
 - DNA importance visualization
 - protein importance visualization
@@ -63,6 +66,19 @@ The normalized DNA sequence is returned by the API and shown in the UI.
 
 The UI only displays the normalized real protein sequence length. It does not display padded positions from the model tensor.
 
+## Bundled model assets
+
+By default, the app loads model assets from the repository itself, which makes it suitable for GitHub push and Render deployment.
+
+Optional environment variable overrides are supported:
+
+```powershell
+$env:TFDNA_MODEL_SCRIPT_PATH = "C:\path\to\multimodal_model.py"
+$env:TFDNA_MODEL_WEIGHTS_PATH = "C:\path\to\best_model_v2_pro.pth"
+```
+
+If these variables are unset, the app uses the bundled repository assets.
+
 ## Attribution methods
 
 ### DNA attribution
@@ -110,8 +126,59 @@ Response includes:
 - `probability`
 - `predicted_label`
 - `predicted_class_text`
+- `email_requested`
+- `email_delivery_status`
+- `email_delivery_message`
 - DNA raw and normalized importance arrays
 - protein raw and normalized importance arrays
+
+## Email delivery
+
+If the user provides an email address in the UI, the backend will try to send the prediction summary after inference.
+
+Email delivery uses SMTP from environment variables:
+
+```powershell
+$env:TFDNA_SMTP_HOST = "smtp.example.com"
+$env:TFDNA_SMTP_PORT = "587"
+$env:TFDNA_SMTP_USERNAME = "sender@example.com"
+$env:TFDNA_SMTP_PASSWORD = "your-password"
+$env:TFDNA_SMTP_FROM = "sender@example.com"
+$env:TFDNA_SMTP_STARTTLS = "true"
+$env:TFDNA_SMTP_SSL = "false"
+```
+
+Notes:
+
+- If no email address is provided, prediction still runs and delivery is skipped.
+- If SMTP is not configured, prediction still runs and the UI/API reports `not_configured`.
+- If SMTP delivery fails, prediction still runs and the UI/API reports `failed`.
+
+## GitHub and Render deployment
+
+### Push to GitHub
+
+After you commit the repository, push it to a GitHub repository as usual.
+
+### Render
+
+This repository includes a ready-to-use `render.yaml`.
+
+Render setup:
+
+1. Create a new Render Web Service from this GitHub repository.
+2. Let Render detect the included `render.yaml`.
+3. In the Render dashboard, fill in the SMTP environment variables:
+   - `TFDNA_SMTP_HOST`
+   - `TFDNA_SMTP_PORT`
+   - `TFDNA_SMTP_USERNAME`
+   - `TFDNA_SMTP_PASSWORD`
+   - `TFDNA_SMTP_FROM`
+   - `TFDNA_SMTP_STARTTLS`
+   - `TFDNA_SMTP_SSL`
+4. Deploy.
+
+The generated Render URL will be publicly accessible. You can then bind a custom domain in Render if needed.
 
 ## Current limitations
 

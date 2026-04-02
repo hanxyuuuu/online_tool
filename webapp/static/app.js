@@ -1,6 +1,7 @@
 const form = document.getElementById("predict-form");
 const dnaInput = document.getElementById("dna-sequence");
 const proteinInput = document.getElementById("protein-sequence");
+const resultEmailInput = document.getElementById("result-email");
 const predictButton = document.getElementById("predict-button");
 const loadingIndicator = document.getElementById("loading-indicator");
 const errorBox = document.getElementById("error-box");
@@ -11,6 +12,7 @@ const probabilityValue = document.getElementById("probability-value");
 const classValue = document.getElementById("class-value");
 const logitValue = document.getElementById("logit-value");
 const inputSummary = document.getElementById("input-summary");
+const deliverySummary = document.getElementById("delivery-summary");
 const normalizedSummary = document.getElementById("normalized-summary");
 const peakSummary = document.getElementById("peak-summary");
 const dnaSequenceView = document.getElementById("dna-sequence-view");
@@ -90,6 +92,21 @@ function buildNormalizedSummary(data) {
   `;
 }
 
+function buildDeliverySummary(data) {
+  const requested = data.email_requested ? "Requested" : "Not requested";
+  deliverySummary.innerHTML = `
+    <div class="delivery-row">
+      <span>Delivery request</span>
+      <strong>${requested}</strong>
+    </div>
+    <div class="delivery-row">
+      <span>Status</span>
+      <strong>${data.email_delivery_status}</strong>
+    </div>
+    <div class="delivery-note">${data.email_delivery_message}</div>
+  `;
+}
+
 function buildPeakSummary(data) {
   const dnaTop = getTopPositions(data.normalized_dna_sequence, data.dna_importance_raw, 3);
   const proteinTop = getTopPositions(data.normalized_protein_sequence, data.protein_importance_raw, 3);
@@ -155,6 +172,7 @@ async function submitPrediction(event) {
 
   const dnaSequence = dnaInput.value.trim();
   const proteinSequence = proteinInput.value.trim();
+  const resultEmail = resultEmailInput.value.trim();
 
   if (!dnaSequence || !proteinSequence) {
     setError("Both protein and DNA sequences are required.");
@@ -171,6 +189,7 @@ async function submitPrediction(event) {
       body: JSON.stringify({
         dna_sequence: dnaSequence,
         protein_sequence: proteinSequence,
+        email: resultEmail,
       }),
     });
 
@@ -188,6 +207,7 @@ async function submitPrediction(event) {
     logitValue.textContent = data.logit.toFixed(6);
 
     buildSummaryLines(data);
+    buildDeliverySummary(data);
     buildNormalizedSummary(data);
     buildPeakSummary(data);
     setInfo(data.input_summary.messages);

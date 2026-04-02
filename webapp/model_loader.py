@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
@@ -9,8 +10,20 @@ from types import ModuleType
 import torch
 
 
-MODEL_SCRIPT_PATH = Path(r"D:\project\NT\Motif_logo\cnn_multimodal_mstc_crossattn_v2_pro_2.py")
-MODEL_WEIGHTS_PATH = Path(r"D:\project\NT\Motif_logo\best_model_v2_pro.pth")
+BASE_DIR = Path(__file__).resolve().parent
+DEFAULT_MODEL_SCRIPT_PATH = BASE_DIR / "model_assets" / "multimodal_model.py"
+DEFAULT_MODEL_WEIGHTS_PATH = BASE_DIR / "model_assets" / "best_model_v2_pro.pth"
+
+
+def _resolve_path(env_name: str, default_path: Path) -> Path:
+    value = os.getenv(env_name, "").strip()
+    if not value:
+        return default_path
+    return Path(value).expanduser().resolve()
+
+
+MODEL_SCRIPT_PATH = _resolve_path("TFDNA_MODEL_SCRIPT_PATH", DEFAULT_MODEL_SCRIPT_PATH)
+MODEL_WEIGHTS_PATH = _resolve_path("TFDNA_MODEL_WEIGHTS_PATH", DEFAULT_MODEL_WEIGHTS_PATH)
 
 
 @dataclass

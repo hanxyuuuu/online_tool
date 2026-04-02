@@ -106,6 +106,13 @@
             <li>Protein sequences longer than {{ protein_max_length }} residues are truncated before scoring.</li>
           </ul>
         </div>
+
+        <div class="sidebar-block">
+          <p class="sidebar-label">Result delivery</p>
+          <p>
+            Add an optional email address to receive the prediction summary and top highlighted positions after inference.
+          </p>
+        </div>
       </aside>
 
       <section class="workspace-main">
@@ -125,6 +132,11 @@
               <textarea id="dna-sequence" name="dna_sequence" rows="12" placeholder="Paste one DNA sequence"></textarea>
             </label>
           </div>
+
+          <label class="field email-field">
+            <span>Result delivery email <em>optional</em></span>
+            <input id="result-email" name="email" type="email" placeholder="name@example.com">
+          </label>
 
           <div class="action-row">
             <button type="submit" id="predict-button">Run binding prediction</button>
@@ -169,14 +181,21 @@
             </div>
 
             <div class="result-block">
-              <h3>Highest-weight positions</h3>
-              <div id="peak-summary" class="peak-summary"></div>
+              <h3>Result delivery</h3>
+              <div id="delivery-summary" class="delivery-summary"></div>
             </div>
           </section>
 
-          <section class="result-block">
-            <h3>Normalized inputs</h3>
-            <div id="normalized-summary" class="normalized-sequences"></div>
+          <section class="result-grid">
+            <div class="result-block">
+              <h3>Highest-weight positions</h3>
+              <div id="peak-summary" class="peak-summary"></div>
+            </div>
+
+            <div class="result-block">
+              <h3>Normalized inputs</h3>
+              <div id="normalized-summary" class="normalized-sequences"></div>
+            </div>
           </section>
 
           <section class="result-block">
@@ -224,6 +243,6 @@
     </section>
   </main>
 
-  <script src="/static/app.js?v=20260402a"></script>
+  <script src="/static/app.js?v=20260402b"></script>
 </body>
 </html>

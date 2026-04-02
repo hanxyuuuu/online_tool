@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -8,6 +8,7 @@ from pydantic import BaseModel
 class PredictionRequest(BaseModel):
     dna_sequence: str
     protein_sequence: str
+    email: Optional[str] = None
 
 
 class InputSummary(BaseModel):
@@ -34,3 +35,6 @@ class PredictionResponse(BaseModel):
     dna_importance_norm: List[float]
     protein_importance_raw: List[float]
     protein_importance_norm: List[float]
+    email_requested: bool = False
+    email_delivery_status: str = "not_requested"
+    email_delivery_message: str = "Email delivery was not requested."
