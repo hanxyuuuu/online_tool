@@ -6,7 +6,7 @@ colorTo: blue
 sdk: docker
 app_port: 7860
 fullWidth: true
-short_description: Predict TF-DNA binding, visualize sequence importance, and optionally email results.
+short_description: Predict TF-DNA binding and email result summaries.
 ---
 
 # TF-DNA Binding Atlas
