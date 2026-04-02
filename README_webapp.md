@@ -180,6 +180,30 @@ Render setup:
 
 The generated Render URL will be publicly accessible. You can then bind a custom domain in Render if needed.
 
+## Hugging Face Spaces deployment
+
+This repository now includes the files required for a Docker Space:
+
+- `README.md` with `sdk: docker`
+- `Dockerfile`
+- bundled model assets inside `webapp/model_assets/`
+
+To deploy on Hugging Face Spaces:
+
+1. Create a new Space and choose the `Docker` SDK.
+2. Push this repository content to the Space repository.
+3. In the Space settings, add runtime secrets or variables for:
+   - `TFDNA_SMTP_HOST`
+   - `TFDNA_SMTP_PORT`
+   - `TFDNA_SMTP_USERNAME`
+   - `TFDNA_SMTP_PASSWORD`
+   - `TFDNA_SMTP_FROM`
+   - `TFDNA_SMTP_STARTTLS`
+   - `TFDNA_SMTP_SSL`
+4. Let the Space build and start.
+
+Hugging Face reads the YAML block from the root `README.md` and the container definition from the `Dockerfile`.
+
 ## Current limitations
 
 - CPU inference only in this demo.
